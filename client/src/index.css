@@ -1,0 +1,12 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #222;
+    font-family: 'Fredericka the Great', cursive;
+    background-image: url('https://dzbc.org/wp-content/uploads/data/2018/2/14/PIC-MCH05963.jpg');
+    font-family: sans-serif;
+    color: rgba(255, 255, 255, .5);
+    font-size: 30px;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
