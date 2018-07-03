@@ -19,5 +19,30 @@ app.get('*', (req, res) => {
 });
 
 const server = http.createServer(app);
+const io = socketIo(server);
+
+io.on("connection", client => {
+
+    const {
+        handleFindGame,
+        handleSelectLine,
+        handleDisconnect
+    } = makeHandlers(client, gameManager);
+
+    client.on('findGame', handleFindGame);
+
+    client.on('selectLine', handleSelectLine);
+
+    client.on('disconnect', function () {
+        console.log('client disconnect...', client.id);
+        handleDisconnect()
+    });
+
+    client.on('error', function (err) {
+        console.log('received error from client:', client.id);
+        console.log(err)
+    });
+
+});
 
 server.listen(port, () => console.log(`Listening on port ${port}`));
