@@ -32,9 +32,11 @@ module.exports = function() {
         if(awaitingPlayer) {
             const newPlayer = createPlayer(acronym, client);
             const gameId = uuid.v4();
-            //TODO: Create new game instance
+            const newGame = Game(gameId, level, awaitingPlayer, newPlayer);
+            games.set(gameId, newGame);
             awaitingPlayers.delete(level.id);
 
+            newGame.start();
         }else {
             const newPlayer = createPlayer(acronym, client);
             awaitingPlayers.set(level.id, newPlayer);
