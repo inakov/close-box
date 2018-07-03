@@ -38,10 +38,82 @@ module.exports = function(id, level, firstPlayer, secondPlayer) {
     const flipCoin = () => Math.random() >= 0.5;
 
     const selectLine = (client, line) => {
-        //TODO: Handle Game logic and send outcome
-        broadcastTurnOutcome({});
+        turnId = turnId + 1;
+        selectedLines[line.direction][line.row][line.col] = true;
+        const closedBoxes = findClosedBoxes(line);
+        closedBoxes.forEach(closedBox => {
+            boxes[closedBox.row][closedBox.col] = closedBox;
+            playerOnTurn.score = playerOnTurn.score + 1;
+        });
+
+        if(playerOnTurn.score > (level.rows * level.cols) / 2) {
+            gameEnd();
+        } else {
+            if(closedBoxes.length < 1){
+                if(playerOnTurn.socket.id === firstPlayer.socket.id) {
+                    playerOnTurn = secondPlayer;
+                } else {
+                    playerOnTurn = firstPlayer;
+                }
+            }
+            const score  = gameScore();
+            broadcastTurnOutcome({
+                turnId,
+                selectedLine: line,
+                closedBoxes,
+                playerIdOnTurn: playerOnTurn.socket.id,
+                gameFinished,
+                score,
+            });
+        }
     };
 
+    const findClosedBoxes = ({row, col, direction}) => {
+        const closedBoxes = [];
+        if (direction === Directions.VERTICAL) {
+            if(row - 1 >= 0 && selectedLines[Directions.VERTICAL][row - 1][col]
+                && selectedLines[Directions.HORIZONTAL][row - 1][col]
+                && col + 1 < selectedLines[Directions.HORIZONTAL][row - 1].length && selectedLines[Directions.HORIZONTAL][row - 1][col + 1]) {
+                closedBoxes.push({closed: true, col: row - 1, row: col, acronym: playerOnTurn.acronym});
+            }
+            if(row + 1 < selectedLines[Directions.VERTICAL].length && selectedLines[Directions.VERTICAL][row + 1][col]
+                && selectedLines[Directions.HORIZONTAL][row][col]
+                && col + 1 < selectedLines[Directions.HORIZONTAL][row].length && selectedLines[Directions.HORIZONTAL][row][col + 1]) {
+                closedBoxes.push({closed: true, row: col, col: row, acronym: playerOnTurn.acronym});
+            }
+        } else if(direction === Directions.HORIZONTAL) {
+            if(col - 1 >= 0 && selectedLines[Directions.HORIZONTAL][row][col - 1]
+                && selectedLines[Directions.VERTICAL][row][col - 1]
+                && row + 1 < selectedLines[Directions.VERTICAL].length && selectedLines[Directions.VERTICAL][row + 1][col - 1]) {
+                closedBoxes.push({closed: true, row: col - 1 , col: row, acronym: playerOnTurn.acronym});
+            }
+            if(col + 1 < selectedLines[Directions.HORIZONTAL][row].length && selectedLines[Directions.HORIZONTAL][row][col + 1]
+                && selectedLines[Directions.VERTICAL][row][col]
+                && row + 1 < selectedLines[Directions.VERTICAL].length && selectedLines[Directions.VERTICAL][row + 1][col]) {
+                closedBoxes.push({closed: true, row: col, col: row, acronym: playerOnTurn.acronym});
+            }
+        }
+
+        return closedBoxes;
+    };
+
+    const gameScore = () => {
+        return [
+            {playerId: firstPlayer.socket.id, score: firstPlayer.score, acronym: firstPlayer.acronym},
+            {playerId: secondPlayer.socket.id, score: secondPlayer.score, acronym: secondPlayer.acronym}
+        ];
+    };
+
+    const gameEnd = () => {
+        gameFinished = true;
+        if(playerOnTurn.socket.id === firstPlayer.socket.id) {
+            firstPlayer.socket.emit('gameEnd', {message: "You Won!", gameFinished});
+            secondPlayer.socket.emit('gameEnd', {message: "You lose...", gameFinished});
+        }else {
+            firstPlayer.socket.emit('gameEnd', {message: "You lose...", gameFinished});
+            secondPlayer.socket.emit('gameEnd', {message: "You Won!", gameFinished})
+        }
+    };
 
     const broadcastTurnOutcome = (outcome) => broadcastEvent('turnOutcome', outcome);
 
