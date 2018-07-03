@@ -1,0 +1,24 @@
+{
+  "name": "close-box",
+  "version": "1.0.0",
+  "description": "A small multi-player game based on React and Node.",
+  "main": "server/server.js",
+  "author": "Ivan Nakov, Elena Gancheva",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "client": "cd client && yarn start",
+    "server": "node server/server.js",
+    "dev": "concurrently --kill-others-on-fail \"yarn server\" \"yarn client\"",
+    "heroku-postbuild": "cd client && yarn && yarn run build",
+    "start": "node server/server.js"
+  },
+  "dependencies": {
+    "express": "^4.16.3",
+    "node-uuid": "^1.4.8",
+    "socket.io": "^2.1.1"
+  },
+  "devDependencies": {
+    "concurrently": "^3.6.0"
+  }
+}
